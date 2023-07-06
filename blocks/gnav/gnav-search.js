@@ -1,5 +1,6 @@
 import {
-  fetchBlogArticleIndex, createOptimizedPicture, getArticleTaxonomy, sampleRUM,
+  fetchBlogArticleIndex, fetchFlexBlogArticleIndex,
+  fetchFlexBlogArticleIndexPathMap, createOptimizedPicture, getArticleTaxonomy, sampleRUM,
 } from '../../scripts/scripts.js';
 import { createTag } from '../block-helpers.js';
 
@@ -55,6 +56,17 @@ function highlightTextElements(terms, elements) {
   });
 }
 
+function populateFlexSearchResults(searchTerms, resultsContainer) {
+  const flexIndex = window.flexBlogIndex.index;
+  var response = flexIndex.search(searchTerms);
+  response.forEach(myFunction);
+  return response;
+}
+
+function myFunction(item, index, arr) {
+  arr[index] = window.flexBlogIndexPathMap.data[item];
+}
+
 async function populateSearchResults(searchTerms, resultsContainer) {
   const limit = 12;
   const terms = searchTerms.toLowerCase().split(' ').map((e) => e.trim()).filter((e) => !!e);
@@ -62,22 +74,36 @@ async function populateSearchResults(searchTerms, resultsContainer) {
 
   if (terms.length) {
     await fetchBlogArticleIndex();
+    await fetchFlexBlogArticleIndex();
+    await fetchFlexBlogArticleIndexPathMap();
+
+  var response = populateFlexSearchResults(searchTerms, resultsContainer);
+
 
     const articles = window.blogIndex.data;
 
     const hits = [];
-    let i = 0;
-    for (; i < articles.length; i += 1) {
-      const e = articles[i];
-      const text = [e.category, e.title, e.teaser].join(' ').toLowerCase();
-
-      if (terms.every((term) => text.includes(term))) {
-        if (hits.length === limit) {
-          break;
-        }
+    for (var i = 0; i < response.length && i < limit; i++) {
+      for (var j = 0; j < articles.length; j += 1) {
+      const e = articles[j];
+      if (e.path === response[i]){
         hits.push(e);
       }
     }
+    }
+
+    // let i = 0;
+    // for (; i < articles.length; i += 1) {
+    //   const e = articles[i];
+    //   const text = [e.category, e.title, e.teaser].join(' ').toLowerCase();
+
+    //   if (terms.every((term) => text.includes(term))) {
+    //     if (hits.length === limit) {
+    //       break;
+    //     }
+    //     hits.push(e);
+    //   }
+    // }
     hits.forEach((hit) => {
       const card = decorateCard(hit);
       resultsContainer.appendChild(card);

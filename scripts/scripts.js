@@ -1220,6 +1220,7 @@ export async function fetchBlogArticleIndex() {
   const index = window.blogIndex;
   const resp = await fetch(`${getRootPath()}/query-index.json?limit=${pageSize}&offset=${index.offset}&cb=true`);
   const json = await resp.json();
+  
   const complete = (json.limit + json.offset) === json.total;
   json.data.forEach((post) => {
     index.data.push(post);
@@ -1229,6 +1230,47 @@ export async function fetchBlogArticleIndex() {
   index.offset = json.offset + pageSize;
   return (index);
 }
+
+export async function fetchFlexBlogArticleIndex() {
+window.flexBlogIndex = window.flexBlogIndex || {
+    data: [],
+    index:null,
+    complete: false,
+  };
+  if (window.flexBlogIndex.complete) return (window.flexBlogIndex);
+  
+  const flexIndex = window.flexBlogIndex;
+  const resp = await fetch("/blogindex-data.json");
+  const json = await resp.json();
+
+  const index = new FlexSearch();
+  index.import(json);
+
+  window.flexBlogIndex.index = index;
+  window.flexBlogIndex.data = json;
+  window.flexBlogIndex.complete = true;
+
+}
+
+export async function fetchFlexBlogArticleIndexPathMap() {
+  window.flexBlogIndexPathMap = window.flexBlogIndexPathMap || {
+    data: {},
+    complete: false,
+  };
+
+  if (window.flexBlogIndexPathMap.complete) return (window.flexBlogIndexPathMap);
+  
+  const flexIndexPathMap = window.flexBlogIndexPathMap
+  const resp = await fetch("/adobe_blogs-paths-fx.json");
+  const json = await resp.json();
+
+  window.flexBlogIndexPathMap.data = json;
+  window.flexBlogIndexPathMap.complete = true;
+}
+
+
+
+
 
 /**
  * gets a blog article index information by path.
