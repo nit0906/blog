@@ -1246,7 +1246,7 @@ window.flexBlogIndex = window.flexBlogIndex || {
   const index = new FlexSearch();
   index.import(json);
 
-  window.flexBlogIndex.index = index;
+  window.flexBlogIndex.flexIndex = index;
   window.flexBlogIndex.data = json;
   window.flexBlogIndex.complete = true;
 

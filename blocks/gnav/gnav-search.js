@@ -57,10 +57,14 @@ function highlightTextElements(terms, elements) {
 }
 
 function populateFlexSearchResults(searchTerms, resultsContainer) {
-  const flexIndex = window.flexBlogIndex.index;
+  const flexIndex = window.flexBlogIndex.flexIndex;
   var response = flexIndex.search(searchTerms);
-  response.forEach(myFunction);
-  return response;
+  const result = [];
+  //response.forEach(myFunction);
+  for (var i = 0; i < response.length; i++) {
+    result.push(window.flexBlogIndexPathMap.data[response[i]]);
+  }
+  return result;
 }
 
 function myFunction(item, index, arr) {
