@@ -1231,25 +1231,98 @@ export async function fetchBlogArticleIndex() {
   return (index);
 }
 
+
+export async function buildFlexBlogIndex() {
+  
+  while(window.blogIndex === undefined || window.blogIndex.complete != true){
+    await fetchFlexBlogArticleIndex();
+  }
+
+  return window.blogIndex.complete;
+}
+
+/**
+ * 
+ * @returns fetches blog article index and then creates flex index from it.
+ */
 export async function fetchFlexBlogArticleIndex() {
-window.flexBlogIndex = window.flexBlogIndex || {
+  const pageSize = 15000;
+  window.blogIndex = window.blogIndex || {
     data: [],
-    index:null,
+    byPath: {},
+    offset: 0,
     complete: false,
   };
+
+  window.flexIndex = new FlexSearch({
+    tokenize: "forward",
+    depth: 10,
+    // TODO : using flex 0.7 + , we can define which fields we want to store and which we want to index separately.
+    doc: {
+        id: "id",
+        field: [
+            "title",
+            "description",
+            "author",
+            "tags",
+            "image"
+        ]
+    }});
+
+    window.flexBlogIndex = window.flexBlogIndex || {
+      //data: [],
+      index:null,
+      complete: false,
+    };
+
+  window.flexPathMap = window.flexPathMap || new Map();
+
   if (window.flexBlogIndex.complete) return (window.flexBlogIndex);
-  
-  const flexIndex = window.flexBlogIndex;
-  const resp = await fetch("/blogindex-data.json");
+
+  const index = window.blogIndex;
+  const fBlogIndex = window.flexBlogIndex;
+  const resp = await fetch(`${getRootPath()}/query-index.json?limit=${pageSize}&offset=${index.offset}&cb=true`);
   const json = await resp.json();
+  const pathMap = window.flexPathMap;
 
-  const index = new FlexSearch();
-  index.import(json);
+  const complete = (json.limit + json.offset) === json.total;
+  var counter = index.offset + 1;
+  json.data.forEach((post) => {
+    // filling up window.blogIndex just so that 
+    // we don't break any existing functionality that is dependent upon this.
+    index.data.push(post);
+    index.byPath[post.path.split('.')[0]] = post;
 
-  window.flexBlogIndex.flexIndex = index;
-  window.flexBlogIndex.data = json;
-  window.flexBlogIndex.complete = true;
+    // Now we build the flex index here
+    var doc = {
+      id: counter,
+      title: post.title,
+      description: post.description,
+      author: post.author,
+      tags: post.tags,
+      image: post.image
+  }
+  window.flexIndex.add(doc);
+  pathMap.set(counter, post.path);
+  counter++;
+  });
 
+  index.complete = complete;
+  index.offset = json.offset + pageSize;
+  fBlogIndex.complete = complete;
+  fBlogIndex.index = window.flexIndex;
+
+  /*if (complete) {
+    // TODO : we probably need to compress this 
+    // export and save index;
+    const jsonRep = JSON.stringify(flexIndex.export());
+    localStorage.setItem('flexExportedIndex', jsonRep);
+
+    const pathMapJson = JSON.stringify(Object.fromEntries(pathMap))
+    localStorage.setItem('flexPathMap', pathMapJson);
+  }*/
+
+  return (fBlogIndex);
 }
 
 export async function fetchFlexBlogArticleIndexPathMap() {
@@ -1456,6 +1529,9 @@ async function loadLazy() {
   sampleRUM('lazy');
   sampleRUM.observe(document.querySelectorAll('main picture > img'));
   sampleRUM.observe(main.querySelectorAll('div[data-block-name]'));
+
+  // async build of the flex index
+  await buildFlexBlogIndex();
 
   if (window.location.pathname.endsWith('/')) {
     // homepage, add query index to publish dependencies

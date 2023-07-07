@@ -57,14 +57,20 @@ function highlightTextElements(terms, elements) {
 }
 
 function populateFlexSearchResults(searchTerms, resultsContainer) {
-  const flexIndex = window.flexBlogIndex.flexIndex;
-  var response = flexIndex.search(searchTerms);
-  const result = [];
+  const flexIndex = window.flexBlogIndex.index;
+  var response = flexIndex.search({
+    field: ["title", "description", "tags"],   
+    query: searchTerms,
+    suggest: true,
+    limit: 20
+});
+
+  //const result = [];
   //response.forEach(myFunction);
   for (var i = 0; i < response.length; i++) {
-    result.push(window.flexBlogIndexPathMap.data[response[i]]);
+    response[i].path=window.flexPathMap.get(response[i].id);
   }
-  return result;
+  return response;
 }
 
 function myFunction(item, index, arr) {
@@ -84,7 +90,7 @@ async function populateSearchResults(searchTerms, resultsContainer) {
   var response = populateFlexSearchResults(searchTerms, resultsContainer);
 
 
-    const articles = window.blogIndex.data;
+    /*const articles = window.blogIndex.data;
 
     const hits = [];
     for (var i = 0; i < response.length && i < limit; i++) {  
@@ -108,13 +114,13 @@ async function populateSearchResults(searchTerms, resultsContainer) {
     //     }
     //     hits.push(e);
     //   }
-    // }
-    hits.forEach((hit) => {
+    // }*/
+    response.forEach((hit) => {
       const card = decorateCard(hit);
       resultsContainer.appendChild(card);
     });
 
-    if (!hits.length) {
+    if (!response.length) {
       resultsContainer.classList.add('no-Results');
     } else {
       resultsContainer.classList.remove('no-Results');
