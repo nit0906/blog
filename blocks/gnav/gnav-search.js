@@ -87,11 +87,12 @@ async function populateSearchResults(searchTerms, resultsContainer) {
     const articles = window.blogIndex.data;
 
     const hits = [];
-    for (var i = 0; i < response.length && i < limit; i++) {
+    for (var i = 0; i < response.length && i < limit; i++) {  
       for (var j = 0; j < articles.length; j += 1) {
       const e = articles[j];
       if (e.path === response[i]){
         hits.push(e);
+        break;
       }
     }
     }
