@@ -83,9 +83,9 @@ async function populateSearchResults(searchTerms, resultsContainer) {
   resultsContainer.innerHTML = '';
 
   if (terms.length) {
-    await fetchBlogArticleIndex();
-    await fetchFlexBlogArticleIndex();
-    await fetchFlexBlogArticleIndexPathMap();
+    //await fetchBlogArticleIndex();
+    //await fetchFlexBlogArticleIndex();
+    //await fetchFlexBlogArticleIndexPathMap();
 
   var response = populateFlexSearchResults(searchTerms, resultsContainer);
 
