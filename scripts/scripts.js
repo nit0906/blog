@@ -1235,7 +1235,7 @@ export async function fetchBlogArticleIndex() {
 export async function buildFlexBlogIndex() {
   
   while(window.blogIndex === undefined || window.blogIndex.complete != true){
-    fetchFlexBlogArticleIndex();
+    await fetchFlexBlogArticleIndex();
   }
 
   return window.blogIndex.complete;
@@ -1254,24 +1254,19 @@ export async function fetchFlexBlogArticleIndex() {
     complete: false,
   };
 
-  /*window.flexIndex = window.flexIndex ||  new FlexSearch({
-    tokenize: "forward",
-    depth: 10,
-    // TODO : using flex 0.7 + , we can define which fields we want to store and which we want to index separately.
-    doc: {
-        id: "id",
-        field: [
-            "title",
-            "description",
-            "author",
-            "tags",
-            "image"
-        ]
-    }});*/
+  console.log("created franklin blog index object");
 
-    window.flexBlogIndex = window.flexBlogIndex || {
+  window.flexBlogIndex = window.flexBlogIndex || {
       //data: [],
-      index: new FlexSearch({
+      index: null,
+      complete: false,
+      indexCreated: false
+    };
+
+    console.log("created flexBlogIndex blog index object");
+
+    if (!window.flexBlogIndex.indexCreated) {
+      const flexFieldIndex = new FlexSearch({
         tokenize: "forward",
         depth: 10,
         // TODO : using flex 0.7 + , we can define which fields we want to store and which we want to index separately.
@@ -1284,16 +1279,19 @@ export async function fetchFlexBlogArticleIndex() {
                 "tags",
                 "image"
             ]
-        }}),
-      complete: false,
-    };
+        }});
+        window.flexBlogIndex.indexCreated = true;
+        window.flexBlogIndex.index = flexFieldIndex;
+      }
+      
+    console.log("created actual index object");
+
 
   window.flexPathMap = window.flexPathMap || new Map();
 
   if (window.flexBlogIndex.complete) return (window.flexBlogIndex);
 
   const index = window.blogIndex;
-  const fBlogIndex = window.flexBlogIndex;
   const resp = await fetch(`${getRootPath()}/query-index.json?limit=${pageSize}&offset=${index.offset}&cb=true`);
   const json = await resp.json();
   const pathMap = window.flexPathMap;
@@ -1320,10 +1318,11 @@ export async function fetchFlexBlogArticleIndex() {
   counter++;
   });
 
+  console.log("docs pushed to index for offest " + json.offest);
+
   index.complete = complete;
   index.offset = json.offset + pageSize;
-  fBlogIndex.complete = complete;
-  fBlogIndex.index = window.flexBlogIndex.index;
+  window.flexBlogIndex.complete = complete;
 
   /*if (complete) {
     // TODO : we probably need to compress this 
@@ -1335,7 +1334,7 @@ export async function fetchFlexBlogArticleIndex() {
     localStorage.setItem('flexPathMap', pathMapJson);
   }*/
 
-  return (fBlogIndex);
+  return (window.flexBlogIndex);
 }
 
 export async function fetchFlexBlogArticleIndexPathMap() {
