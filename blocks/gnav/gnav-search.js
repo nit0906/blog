@@ -1,6 +1,7 @@
 import {
   fetchBlogArticleIndex, fetchFlexBlogArticleIndex,
   fetchFlexBlogArticleIndexPathMap, createOptimizedPicture, getArticleTaxonomy, sampleRUM,
+  buildFlexBlogIndex
 } from '../../scripts/scripts.js';
 import { createTag } from '../block-helpers.js';
 
@@ -131,6 +132,7 @@ async function populateSearchResults(searchTerms, resultsContainer) {
 }
 
 export default function onSearchInput(value, resultsContainer, advancedLink) {
+  buildFlexBlogIndex();
   populateSearchResults(value, resultsContainer);
   sampleRUM('search', { source: '.gnav-search-input', target: value });
   if (advancedLink) {

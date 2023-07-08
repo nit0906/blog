@@ -1233,10 +1233,17 @@ export async function fetchBlogArticleIndex() {
 
 
 export async function buildFlexBlogIndex() {
-  
-  while(window.blogIndex === undefined || window.blogIndex.complete != true){
+
+  if (window.flexBlogIndex != undefined && window.flexBlogIndex.indexCreated === true){
+    return;
+  }
+  var start = Date.now();
+  while(window.flexBlogIndex === undefined || window.flexBlogIndex.complete != true){
     await fetchFlexBlogArticleIndex();
   }
+  var end = Date.now();
+
+  console.log("Time taken to build the complete index " + (end-start));
 
   return window.blogIndex.complete;
 }
@@ -1246,24 +1253,15 @@ export async function buildFlexBlogIndex() {
  * @returns fetches blog article index and then creates flex index from it.
  */
 export async function fetchFlexBlogArticleIndex() {
-  const pageSize = 500;
-  window.blogIndex = window.blogIndex || {
-    data: [],
-    byPath: {},
-    offset: 0,
-    complete: false,
-  };
-
-  console.log("created franklin blog index object");
+  const pageSize = 15000;
 
   window.flexBlogIndex = window.flexBlogIndex || {
       //data: [],
       index: null,
       complete: false,
-      indexCreated: false
+      indexCreated: false,
+      offset: 0
     };
-
-    console.log("created flexBlogIndex blog index object");
 
     if (!window.flexBlogIndex.indexCreated) {
       const flexFieldIndex = new FlexSearch({
@@ -1283,27 +1281,20 @@ export async function fetchFlexBlogArticleIndex() {
         window.flexBlogIndex.indexCreated = true;
         window.flexBlogIndex.index = flexFieldIndex;
       }
-      
-    console.log("created actual index object");
 
 
   window.flexPathMap = window.flexPathMap || new Map();
 
   if (window.flexBlogIndex.complete) return (window.flexBlogIndex);
 
-  const index = window.blogIndex;
-  const resp = await fetch(`${getRootPath()}/query-index.json?limit=${pageSize}&offset=${index.offset}&cb=true`);
+  const resp = await fetch(`${getRootPath()}/query-index.json?limit=${pageSize}&offset=${window.flexBlogIndex.offset}&cb=true`);
   const json = await resp.json();
   const pathMap = window.flexPathMap;
 
   const complete = (json.limit + json.offset) === json.total;
-  var counter = index.offset + 1;
+  var counter = window.flexBlogIndex.offset + 1;
+  var start = Date.now();
   json.data.forEach((post) => {
-    // filling up window.blogIndex just so that 
-    // we don't break any existing functionality that is dependent upon this.
-    index.data.push(post);
-    index.byPath[post.path.split('.')[0]] = post;
-
     // Now we build the flex index here
     var doc = {
       id: counter,
@@ -1317,11 +1308,11 @@ export async function fetchFlexBlogArticleIndex() {
   pathMap.set(counter, post.path);
   counter++;
   });
+  
+  var end = Date.now();
+  console.log("Time taken to add " + pageSize + " documents to the index from offset " + json.offset + " -> " + (end-start));
 
-  console.log("docs pushed to index for offest " + json.offest);
-
-  index.complete = complete;
-  index.offset = json.offset + pageSize;
+  window.flexBlogIndex.offset = json.offset + pageSize;
   window.flexBlogIndex.complete = complete;
 
   /*if (complete) {
@@ -1543,7 +1534,7 @@ async function loadLazy() {
   sampleRUM.observe(main.querySelectorAll('div[data-block-name]'));
 
   // async build of the flex index
-  buildFlexBlogIndex();
+  //buildFlexBlogIndex();
 
   if (window.location.pathname.endsWith('/')) {
     // homepage, add query index to publish dependencies
