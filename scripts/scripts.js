@@ -1254,7 +1254,7 @@ export async function fetchFlexBlogArticleIndex() {
     complete: false,
   };
 
-  window.flexIndex = window.flexIndex ||  new FlexSearch({
+  /*window.flexIndex = window.flexIndex ||  new FlexSearch({
     tokenize: "forward",
     depth: 10,
     // TODO : using flex 0.7 + , we can define which fields we want to store and which we want to index separately.
@@ -1267,11 +1267,24 @@ export async function fetchFlexBlogArticleIndex() {
             "tags",
             "image"
         ]
-    }});
+    }});*/
 
     window.flexBlogIndex = window.flexBlogIndex || {
       //data: [],
-      index:null,
+      index: new FlexSearch({
+        tokenize: "forward",
+        depth: 10,
+        // TODO : using flex 0.7 + , we can define which fields we want to store and which we want to index separately.
+        doc: {
+            id: "id",
+            field: [
+                "title",
+                "description",
+                "author",
+                "tags",
+                "image"
+            ]
+        }}),
       complete: false,
     };
 
@@ -1302,7 +1315,7 @@ export async function fetchFlexBlogArticleIndex() {
       tags: post.tags,
       image: post.image
   }
-  window.flexIndex.add(doc);
+  window.flexBlogIndex.index.add(doc);
   pathMap.set(counter, post.path);
   counter++;
   });
@@ -1310,7 +1323,7 @@ export async function fetchFlexBlogArticleIndex() {
   index.complete = complete;
   index.offset = json.offset + pageSize;
   fBlogIndex.complete = complete;
-  fBlogIndex.index = window.flexIndex;
+  fBlogIndex.index = window.flexBlogIndex.index;
 
   /*if (complete) {
     // TODO : we probably need to compress this 
