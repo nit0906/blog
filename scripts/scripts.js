@@ -1235,7 +1235,7 @@ export async function fetchBlogArticleIndex() {
 export async function buildFlexBlogIndex() {
   
   while(window.blogIndex === undefined || window.blogIndex.complete != true){
-    await fetchFlexBlogArticleIndex();
+    fetchFlexBlogArticleIndex();
   }
 
   return window.blogIndex.complete;
@@ -1246,7 +1246,7 @@ export async function buildFlexBlogIndex() {
  * @returns fetches blog article index and then creates flex index from it.
  */
 export async function fetchFlexBlogArticleIndex() {
-  const pageSize = 15000;
+  const pageSize = 500;
   window.blogIndex = window.blogIndex || {
     data: [],
     byPath: {},
@@ -1254,7 +1254,7 @@ export async function fetchFlexBlogArticleIndex() {
     complete: false,
   };
 
-  window.flexIndex = new FlexSearch({
+  window.flexIndex = window.flexIndex ||  new FlexSearch({
     tokenize: "forward",
     depth: 10,
     // TODO : using flex 0.7 + , we can define which fields we want to store and which we want to index separately.
@@ -1531,7 +1531,7 @@ async function loadLazy() {
   sampleRUM.observe(main.querySelectorAll('div[data-block-name]'));
 
   // async build of the flex index
-  await buildFlexBlogIndex();
+  buildFlexBlogIndex();
 
   if (window.location.pathname.endsWith('/')) {
     // homepage, add query index to publish dependencies
