@@ -61,7 +61,7 @@ function populateFlexSearchResults(searchTerms, resultsContainer) {
   const flexIndex = window.flexBlogIndex.index;
 
   var response = flexIndex.search({  
-    field: ["title", "description", "tags"],
+    field: ["title", "description"],
     query: searchTerms,
     suggest: true,
     limit: 50
