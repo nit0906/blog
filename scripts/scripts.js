@@ -1266,7 +1266,6 @@ export async function fetchFlexBlogArticleIndex() {
     if (!window.flexBlogIndex.indexCreated) {
       const flexFieldIndex = new FlexSearch({
         tokenize: "forward",
-        depth: 10,
         // TODO : using flex 0.7 + , we can define which fields we want to store and which we want to index separately.
         doc: {
             id: "id",

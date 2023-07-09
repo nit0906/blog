@@ -59,11 +59,12 @@ function highlightTextElements(terms, elements) {
 
 function populateFlexSearchResults(searchTerms, resultsContainer) {
   const flexIndex = window.flexBlogIndex.index;
-  var response = flexIndex.search({
-    field: ["title", "description", "tags"],   
+
+  var response = flexIndex.search({  
+    field: ["title", "description", "tags"],
     query: searchTerms,
     suggest: true,
-    limit: 20
+    limit: 50
 });
 
   //const result = [];
